@@ -7,6 +7,7 @@ import '../models/password_entry.dart';
 import '../providers/auth_provider.dart';
 import '../providers/vault_provider.dart';
 import '../widgets/password_card.dart';
+import 'audit_screen.dart';
 import 'edit_entry_screen.dart';
 import 'settings_screen.dart';
 
@@ -166,20 +167,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   subtitle: Text(
                     '${vault.weakCount} mot(s) de passe faible(s) sur ${vault.entries.length}',
                   ),
-                  trailing: vault.weakCount > 0
-                      ? TextButton(
-                          onPressed: () {
-                            if (!vault.showWeakOnly) {
-                              vault.toggleWeakOnly();
-                            }
-                            vault.setSortMode(VaultSortMode.weakFirst);
-                          },
-                          child: const Text('Voir'),
-                        )
-                      : const Icon(
-                          Icons.check_circle_rounded,
-                          color: Color(0xFF70D6A1),
-                        ),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            AuditScreen(sessionKey: widget.sessionKey),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
