@@ -28,6 +28,9 @@ class AuthProvider extends ChangeNotifier {
   bool get isUnlocked => _stage == AuthStage.unlocked;
 
   Future<void> init() async {
+    final start = DateTime.now();
+    const minSplashDuration = Duration(milliseconds: 1400);
+
     _stage = AuthStage.loading;
     notifyListeners();
 
@@ -35,6 +38,12 @@ class AuthProvider extends ChangeNotifier {
     _biometricsAvailable = await _authService.canUseBiometrics();
     _biometricsEnabled = await _authService.isBiometricUnlockEnabled();
     _lockTimeoutSeconds = await _authService.getLockTimeoutSeconds();
+
+    final elapsed = DateTime.now().difference(start);
+    final remaining = minSplashDuration - elapsed;
+    if (remaining > Duration.zero) {
+      await Future<void>.delayed(remaining);
+    }
 
     _stage = hasMaster ? AuthStage.locked : AuthStage.setup;
     notifyListeners();

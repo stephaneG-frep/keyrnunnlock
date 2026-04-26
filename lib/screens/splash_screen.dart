@@ -7,20 +7,28 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: AuroraBackground(
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Icon(Icons.lock_rounded, size: 64, color: Color(0xFF3DEBFF)),
-              SizedBox(height: 14),
-              Text(
+              ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Image.asset(
+                  'assets/icon/keyrnunnlock-logo.jpeg',
+                  width: 170,
+                  height: 170,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
                 'Keyrnunnlock',
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
               ),
-              SizedBox(height: 20),
-              CircularProgressIndicator(),
+              const SizedBox(height: 20),
+              const CircularProgressIndicator(),
             ],
           ),
         ),
