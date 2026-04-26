@@ -6,6 +6,7 @@ class PasswordEntry {
     required this.password,
     required this.url,
     required this.category,
+    required this.tags,
     required this.note,
     required this.createdAt,
     required this.updatedAt,
@@ -17,6 +18,7 @@ class PasswordEntry {
   final String password;
   final String url;
   final String category;
+  final List<String> tags;
   final String note;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -28,6 +30,7 @@ class PasswordEntry {
     String? password,
     String? url,
     String? category,
+    List<String>? tags,
     String? note,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -39,10 +42,19 @@ class PasswordEntry {
       password: password ?? this.password,
       url: url ?? this.url,
       category: category ?? this.category,
+      tags: tags ?? this.tags,
       note: note ?? this.note,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
+  }
+
+  List<String> get allTags {
+    final values = <String>[
+      category,
+      ...tags,
+    ].map((e) => e.trim()).where((e) => e.isNotEmpty).toSet().toList();
+    return values;
   }
 
   Map<String, dynamic> toJson() {
@@ -53,6 +65,7 @@ class PasswordEntry {
       'password': password,
       'url': url,
       'category': category,
+      'tags': tags,
       'note': note,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
@@ -60,16 +73,33 @@ class PasswordEntry {
   }
 
   factory PasswordEntry.fromJson(Map<String, dynamic> json) {
+    final legacyCategory = (json['category'] as String? ?? '').trim();
+
+    final rawTags = (json['tags'] as List<dynamic>? ?? <dynamic>[])
+        .map((e) => (e as String).trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    final merged = <String>{
+      if (legacyCategory.isNotEmpty) legacyCategory,
+      ...rawTags,
+    }.toList();
+
     return PasswordEntry(
       id: json['id'] as String,
       title: json['title'] as String? ?? '',
       username: json['username'] as String? ?? '',
       password: json['password'] as String? ?? '',
       url: json['url'] as String? ?? '',
-      category: json['category'] as String? ?? '',
+      category: merged.isEmpty ? '' : merged.first,
+      tags: merged.length <= 1 ? <String>[] : merged.sublist(1),
       note: json['note'] as String? ?? '',
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
+          DateTime.now(),
     );
   }
 }

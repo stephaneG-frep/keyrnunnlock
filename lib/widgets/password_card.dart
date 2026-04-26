@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/password_entry.dart';
+import '../utils/password_strength.dart';
 
 class PasswordCard extends StatefulWidget {
   const PasswordCard({
@@ -28,6 +29,7 @@ class _PasswordCardState extends State<PasswordCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strength = PasswordStrength.evaluate(widget.entry.password);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -46,9 +48,17 @@ class _PasswordCardState extends State<PasswordCard> {
                     ),
                   ),
                 ),
-                _tag(widget.entry.category),
+                _strengthTag(strength),
               ],
             ),
+            if (widget.entry.allTags.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: widget.entry.allTags.map(_tag).toList(),
+              ),
+            ],
             const SizedBox(height: 12),
             _infoRow(
               label: 'Identifiant',
@@ -153,8 +163,28 @@ class _PasswordCardState extends State<PasswordCard> {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        category.isEmpty ? 'Général' : category,
+        category,
         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
+  Widget _strengthTag(PasswordStrengthResult strength) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: strength.color.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: strength.color.withValues(alpha: 0.6)),
+      ),
+      child: Text(
+        strength.label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: strength.color,
+        ),
       ),
     );
   }

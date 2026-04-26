@@ -5,6 +5,9 @@ import 'package:flutter/foundation.dart';
 
 import '../models/password_entry.dart';
 import '../services/vault_service.dart';
+import '../utils/password_strength.dart';
+
+enum VaultSortMode { updatedDesc, updatedAsc, titleAsc, titleDesc, weakFirst }
 
 class VaultProvider extends ChangeNotifier {
   VaultProvider({required VaultService vaultService})
@@ -15,18 +18,62 @@ class VaultProvider extends ChangeNotifier {
   final List<PasswordEntry> _entries = <PasswordEntry>[];
   bool _isLoading = false;
   String _query = '';
+  VaultSortMode _sortMode = VaultSortMode.updatedDesc;
+  bool _showWeakOnly = false;
 
   List<PasswordEntry> get entries => List<PasswordEntry>.unmodifiable(_entries);
   bool get isLoading => _isLoading;
   String get query => _query;
+  VaultSortMode get sortMode => _sortMode;
+  bool get showWeakOnly => _showWeakOnly;
+
+  int get weakCount {
+    return _entries
+        .where((e) => PasswordStrength.evaluate(e.password).isWeak)
+        .length;
+  }
 
   List<PasswordEntry> get filteredEntries {
     final normalized = _query.trim().toLowerCase();
-    if (normalized.isEmpty) return entries;
-    return entries.where((entry) {
-      return entry.title.toLowerCase().contains(normalized) ||
-          entry.category.toLowerCase().contains(normalized);
+
+    var list = entries.where((entry) {
+      final bySearch = normalized.isEmpty
+          ? true
+          : entry.title.toLowerCase().contains(normalized) ||
+                entry.category.toLowerCase().contains(normalized) ||
+                entry.allTags.any(
+                  (tag) => tag.toLowerCase().contains(normalized),
+                );
+
+      final byWeak =
+          !_showWeakOnly || PasswordStrength.evaluate(entry.password).isWeak;
+
+      return bySearch && byWeak;
     }).toList();
+
+    switch (_sortMode) {
+      case VaultSortMode.updatedDesc:
+        list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      case VaultSortMode.updatedAsc:
+        list.sort((a, b) => a.updatedAt.compareTo(b.updatedAt));
+      case VaultSortMode.titleAsc:
+        list.sort(
+          (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
+        );
+      case VaultSortMode.titleDesc:
+        list.sort(
+          (a, b) => b.title.toLowerCase().compareTo(a.title.toLowerCase()),
+        );
+      case VaultSortMode.weakFirst:
+        list.sort((a, b) {
+          final sa = PasswordStrength.evaluate(a.password).score;
+          final sb = PasswordStrength.evaluate(b.password).score;
+          if (sa != sb) return sa.compareTo(sb);
+          return b.updatedAt.compareTo(a.updatedAt);
+        });
+    }
+
+    return list;
   }
 
   Future<void> load(SecretKey key) async {
@@ -50,7 +97,6 @@ class VaultProvider extends ChangeNotifier {
       _entries[index] = entry;
     }
 
-    _entries.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     notifyListeners();
     await _vaultService.saveEntries(_entries, key);
   }
@@ -70,7 +116,6 @@ class VaultProvider extends ChangeNotifier {
       _entries
         ..clear()
         ..addAll(importedEntries);
-      _entries.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       notifyListeners();
       await _vaultService.saveEntries(_entries, key);
       return (added: importedEntries.length, updated: 0, skipped: 0);
@@ -100,7 +145,6 @@ class VaultProvider extends ChangeNotifier {
     _entries
       ..clear()
       ..addAll(byId.values);
-    _entries.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     notifyListeners();
     await _vaultService.saveEntries(_entries, key);
 
@@ -112,9 +156,21 @@ class VaultProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSortMode(VaultSortMode mode) {
+    _sortMode = mode;
+    notifyListeners();
+  }
+
+  void toggleWeakOnly() {
+    _showWeakOnly = !_showWeakOnly;
+    notifyListeners();
+  }
+
   void clearForLock() {
     _entries.clear();
     _query = '';
+    _showWeakOnly = false;
+    _sortMode = VaultSortMode.updatedDesc;
     notifyListeners();
   }
 

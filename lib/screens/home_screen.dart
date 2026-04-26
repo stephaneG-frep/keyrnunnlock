@@ -88,6 +88,42 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Keyrnunnlock'),
         actions: <Widget>[
+          PopupMenuButton<VaultSortMode>(
+            tooltip: 'Tri',
+            icon: const Icon(Icons.sort_rounded),
+            onSelected: vault.setSortMode,
+            itemBuilder: (context) => const <PopupMenuEntry<VaultSortMode>>[
+              PopupMenuItem(
+                value: VaultSortMode.updatedDesc,
+                child: Text('Plus récents'),
+              ),
+              PopupMenuItem(
+                value: VaultSortMode.updatedAsc,
+                child: Text('Plus anciens'),
+              ),
+              PopupMenuItem(
+                value: VaultSortMode.titleAsc,
+                child: Text('Titre A → Z'),
+              ),
+              PopupMenuItem(
+                value: VaultSortMode.titleDesc,
+                child: Text('Titre Z → A'),
+              ),
+              PopupMenuItem(
+                value: VaultSortMode.weakFirst,
+                child: Text('Faibles en premier'),
+              ),
+            ],
+          ),
+          IconButton(
+            onPressed: vault.toggleWeakOnly,
+            icon: Icon(
+              vault.showWeakOnly
+                  ? Icons.warning_amber_rounded
+                  : Icons.warning_amber_outlined,
+            ),
+            tooltip: 'Afficher seulement les mots de passe faibles',
+          ),
           IconButton(
             onPressed: () {
               Navigator.of(context).push(
@@ -116,7 +152,34 @@ class _HomeScreenState extends State<HomeScreen> {
                 onChanged: vault.setQuery,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.search_rounded),
-                  labelText: 'Rechercher (titre ou catégorie)',
+                  labelText: 'Rechercher (titre, catégorie ou tag)',
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              child: Card(
+                child: ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.health_and_safety_rounded),
+                  title: const Text('Audit sécurité'),
+                  subtitle: Text(
+                    '${vault.weakCount} mot(s) de passe faible(s) sur ${vault.entries.length}',
+                  ),
+                  trailing: vault.weakCount > 0
+                      ? TextButton(
+                          onPressed: () {
+                            if (!vault.showWeakOnly) {
+                              vault.toggleWeakOnly();
+                            }
+                            vault.setSortMode(VaultSortMode.weakFirst);
+                          },
+                          child: const Text('Voir'),
+                        )
+                      : const Icon(
+                          Icons.check_circle_rounded,
+                          color: Color(0xFF70D6A1),
+                        ),
                 ),
               ),
             ),
