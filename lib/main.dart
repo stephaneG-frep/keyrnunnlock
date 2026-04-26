@@ -13,6 +13,7 @@ import 'services/secure_storage_service.dart';
 import 'services/vault_service.dart';
 import 'utils/app_theme.dart';
 import 'widgets/activity_listener.dart';
+import 'widgets/lifecycle_lock.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,9 +47,11 @@ class KeyrnunnlockApp extends StatelessWidget {
         theme: AppTheme.darkTheme(),
         home: Builder(
           builder: (context) {
-            return ActivityListener(
-              onActivity: context.read<AuthProvider>().registerUserActivity,
-              child: const _RootGate(),
+            return LifecycleLock(
+              child: ActivityListener(
+                onActivity: context.read<AuthProvider>().registerUserActivity,
+                child: const _RootGate(),
+              ),
             );
           },
         ),
