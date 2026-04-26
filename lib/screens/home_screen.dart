@@ -37,10 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _openEditor([PasswordEntry? entry]) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => EditEntryScreen(
-          sessionKey: widget.sessionKey,
-          initialEntry: entry,
-        ),
+        builder: (_) =>
+            EditEntryScreen(sessionKey: widget.sessionKey, initialEntry: entry),
       ),
     );
   }
@@ -67,7 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (confirm == true && mounted) {
-      await context.read<VaultProvider>().deleteEntry(entry.id, widget.sessionKey);
+      await context.read<VaultProvider>().deleteEntry(
+        entry.id,
+        widget.sessionKey,
+      );
     }
   }
 
@@ -91,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => const SettingsScreen(),
+                  builder: (_) => SettingsScreen(sessionKey: widget.sessionKey),
                 ),
               );
             },
@@ -135,8 +136,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 return PasswordCard(
                                   key: ValueKey<String>(entry.id),
                                   entry: entry,
-                                  onCopyUsername: () => _copyText('Identifiant', entry.username),
-                                  onCopyPassword: () => _copyText('Mot de passe', entry.password),
+                                  onCopyUsername: () =>
+                                      _copyText('Identifiant', entry.username),
+                                  onCopyPassword: () =>
+                                      _copyText('Mot de passe', entry.password),
                                   onEdit: () => _openEditor(entry),
                                   onDelete: () => _deleteEntry(entry),
                                 );
@@ -167,7 +170,11 @@ class _EmptyVault extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            const Icon(Icons.lock_person_rounded, size: 58, color: Color(0xFF3DEBFF)),
+            const Icon(
+              Icons.lock_person_rounded,
+              size: 58,
+              color: Color(0xFF3DEBFF),
+            ),
             const SizedBox(height: 12),
             Text(
               'Aucune entrée pour le moment',
